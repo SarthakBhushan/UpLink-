@@ -1,6 +1,8 @@
 # 🌟 UpLink - friendly file sharing app
 The UpLink is a comprehensive platform designed to facilitate file uploads, management, and sharing. It provides a robust set of features, including user authentication, file metadata management, and transaction tracking. The project is built using a combination of frontend and backend technologies, ensuring a seamless user experience and efficient data processing.
 
+![Uplink App Screenshot](frontend/Uplink.png)
+
 ## 🚀 Key Features
 * User authentication and authorization using Clerk
 * File upload and management with metadata storage
