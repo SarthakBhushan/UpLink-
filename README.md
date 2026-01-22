@@ -1,5 +1,5 @@
-# 🌟 UpLink API Project Overview
-The UpLink API is a comprehensive platform designed to facilitate file uploads, management, and sharing. It provides a robust set of features, including user authentication, file metadata management, and transaction tracking. The project is built using a combination of frontend and backend technologies, ensuring a seamless user experience and efficient data processing.
+# 🌟 UpLink - friendly file sharing app
+The UpLink is a comprehensive platform designed to facilitate file uploads, management, and sharing. It provides a robust set of features, including user authentication, file metadata management, and transaction tracking. The project is built using a combination of frontend and backend technologies, ensuring a seamless user experience and efficient data processing.
 
 ## 🚀 Key Features
 * User authentication and authorization using Clerk
@@ -61,6 +61,7 @@ To get started with the project, follow these steps:
 │   │   ├── resources
 │   │   │   ├── application.properties
 │   ├── pom.xml
+
 ├── frontend
 │   ├── public
 │   ├── src
@@ -100,7 +101,5 @@ To contribute to the project, please follow these steps:
 The project is licensed under the MIT License.
 
 ## 📬 Contact
-For any questions or concerns, please contact us at [support@example.com](mailto:support@example.com).
+For any questions or concerns, please contact us at [support@example.com](mailto:sarthakbhushan7s@gmail.com).
 
-## 💖 Thanks Message
-This is written by readme.ai so and so [readme.ai](https://readme-generator-phi.vercel.app/)
