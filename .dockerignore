@@ -1,0 +1,28 @@
+# Build output (re-built inside Docker)
+target/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# Local env — secrets must come from Render dashboard env vars, NOT baked into the image
+.env
+
+# Git history (not needed in image)
+.git/
+.gitignore
+
+# Logs and local uploads
+*.log
+uploads/
+upload/
+
+# Docs and benchmarks (not part of the app)
+*.md
+benchmark/
+src-backend.zip
+
+# OS noise
+.DS_Store
+Thumbs.db

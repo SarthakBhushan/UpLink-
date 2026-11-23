@@ -12,4 +12,6 @@ public interface PaymentTransactionRepository extends MongoRepository<PaymentTra
     List<PaymentTransaction> findByClerkIdOrderByTransactionDateDesc(String clerkId);
 
     List<PaymentTransaction> findByClerkIdAndStatusOrderByTransactionDateDesc(String clerkId, String status);
+
+    java.util.Optional<PaymentTransaction> findByOrderId(String orderId);
 }

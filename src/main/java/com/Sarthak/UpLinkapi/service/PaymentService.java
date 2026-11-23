@@ -7,7 +7,6 @@ import com.Sarthak.UpLinkapi.dto.PaymentVerificationDTO;
 import com.Sarthak.UpLinkapi.repository.PaymentTransactionRepository;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -135,18 +134,15 @@ public class PaymentService {
     }
 
     private void updateTransactionStatus(String razorpayOrderId, String status, String razorpayPaymentId, Integer creditsToAdd) {
-        paymentTransactionRepository.findAll().stream()
-                .filter(t -> t.getOrderId() != null && t.getOrderId().equals(razorpayOrderId))
-                .findFirst()
-                .map(transaction -> {
+        paymentTransactionRepository.findByOrderId(razorpayOrderId)
+                .ifPresent(transaction -> {
                     transaction.setStatus(status);
                     transaction.setPaymentId(razorpayPaymentId);
                     if (creditsToAdd != null) {
                         transaction.setCreditsAdded(creditsToAdd);
                     }
-                    return paymentTransactionRepository.save(transaction);
-                })
-                .orElse(null);
+                    paymentTransactionRepository.save(transaction);
+                });
     }
 
     /**
@@ -173,10 +169,7 @@ public class PaymentService {
         return result;
     }
 
-    @PostConstruct
-    public void checkKey() {
-        System.out.println("Razorpay Key ID: " + razorpayKeyId);
-    }
+
 
 
 }

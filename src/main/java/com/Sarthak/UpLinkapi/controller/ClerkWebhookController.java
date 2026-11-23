@@ -7,12 +7,19 @@ import com.Sarthak.UpLinkapi.service.UserCreditsService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+@Slf4j
 @RestController
 @RequestMapping("/webhooks")
 @RequiredArgsConstructor
@@ -117,7 +124,48 @@ public class ClerkWebhookController {
         userCreditsService.createInitialCredits(clerkId);
     }
 
+    /**
+     * Svix webhook signature verification (HMAC-SHA256).
+     *
+     * Svix signs webhooks by computing:
+     *   HMAC-SHA256(key=base64_decode(secret_after_prefix), msg="{svix-id}.{svix-timestamp}.{payload}")
+     * and base64-encoding the result. The svix-signature header contains one or more
+     * comma-separated "v1,<base64>" values — any one matching is sufficient.
+     *
+     * Docs: https://docs.svix.com/receiving/verifying-payloads/how
+     */
     private boolean verifyWebhookSignature(String svixId, String svixTimestamp, String svixSignature, String payload) {
-        return true;
+        try {
+            // Svix secrets are prefixed with "whsec_" — strip it before base64-decoding
+            String secret = webhookSecret.startsWith("whsec_")
+                    ? webhookSecret.substring("whsec_".length())
+                    : webhookSecret;
+            byte[] keyBytes = Base64.getDecoder().decode(secret);
+
+            // Message to sign: "{svix-id}.{svix-timestamp}.{raw-body}"
+            String message = svixId + "." + svixTimestamp + "." + payload;
+            byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
+
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(keyBytes, "HmacSHA256"));
+            String computedSignature = Base64.getEncoder().encodeToString(mac.doFinal(messageBytes));
+
+            // svix-signature header: "v1,<base64sig1> v1,<base64sig2> ..."  (space or comma separated)
+            for (String part : svixSignature.split("[ ,]+")) {
+                if (part.startsWith("v1,")) {
+                    String incomingSig = part.substring("v1,".length());
+                    if (computedSignature.equals(incomingSig)) {
+                        return true;
+                    }
+                }
+            }
+
+            log.warn("Webhook signature mismatch — request rejected");
+            return false;
+
+        } catch (Exception e) {
+            log.error("Webhook signature verification error: {}", e.getMessage());
+            return false;
+        }
     }
 }
