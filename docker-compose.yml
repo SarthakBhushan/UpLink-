@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. MongoDB - Document & Metadata Store
+  # ---------------------------------------------------------------------------
+  mongodb:
+    image: mongo:7.0
+    container_name: uplink-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: uplink
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - uplink-net
+
+  # ---------------------------------------------------------------------------
+  # 2. Redis - Distributed Caching, Token Bucket Rate Limiting & Redisson Locks
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7.2-alpine
+    container_name: uplink-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - uplink-net
+
+  # ---------------------------------------------------------------------------
+  # 3. Apache Kafka & Zookeeper - Event-Driven Asynchronous Pipeline
+  # ---------------------------------------------------------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: uplink-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - uplink-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: uplink-kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - uplink-net
+
+  # ---------------------------------------------------------------------------
+  # 4. LocalStack - AWS S3 Emulator for Cloud-Native Object Storage Testing
+  # ---------------------------------------------------------------------------
+  localstack:
+    image: localstack/localstack:3.0
+    container_name: uplink-localstack
+    restart: unless-stopped
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - localstack-data:/var/lib/localstack
+    networks:
+      - uplink-net
+
+  # ---------------------------------------------------------------------------
+  # 5. Qdrant - High-Performance Vector Database for RAG Semantic Search
+  # ---------------------------------------------------------------------------
+  qdrant:
+    image: qdrant/qdrant:v1.8.2
+    container_name: uplink-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - uplink-net
+
+networks:
+  uplink-net:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  redis-data:
+  localstack-data:
+  qdrant-data:
